@@ -23,6 +23,18 @@ uv run remit config show
 uv run pytest
 ```
 
+CUDA 12.8 + Conda 服务器请使用仓库提供的环境入口。Conda 负责隔离 Python，依赖直接
+安装到该 Conda 环境中，不会额外创建 `.venv`：
+
+```bash
+conda env create -f environment.server.yml
+conda activate toxicity-remit
+uv pip install --python "$CONDA_PREFIX/bin/python" \
+  --requirements requirements-server-cu128.txt \
+  --extra-index-url https://download.pytorch.org/whl/cu128
+python -m remit.system_check --require-cuda --expected-cuda 12.8
+```
+
 ## 准备数据
 
 将原始 CSV 放到 `data/raw/`。默认 Tox21 配置要求：

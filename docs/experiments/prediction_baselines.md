@@ -50,25 +50,38 @@ score. Every prediction is stored in long form as one molecule-endpoint row.
 | Precision | BF16 autocast on CUDA; FP32 on CPU |
 | Repetitions | split IDs 0/1/2 and model seeds 2026/2027/2028 |
 
-## A800 server setup
+## A800 server setup (Conda + CUDA 12.8)
 
-The lock file uses a CPU PyTorch wheel outside Linux and a CUDA 12.6 wheel on Linux. On the server:
+The Linux dependency source is the official PyTorch CUDA 12.8 wheel index. Conda owns the isolated
+Python 3.11 environment; `uv pip` installs directly into that environment, so no nested `.venv` is
+created:
 
 ```bash
 git clone https://github.com/xiao-create9/toxicity_remit.git
 cd toxicity_remit
-uv sync --locked --extra dev
-uv run python -c "import torch; print(torch.__version__, torch.cuda.is_available(), torch.version.cuda)"
+
+conda env create -f environment.server.yml
+conda activate toxicity-remit
+uv pip install --python "$CONDA_PREFIX/bin/python" \
+  --requirements requirements-server-cu128.txt \
+  --extra-index-url https://download.pytorch.org/whl/cu128
+
+python -m remit.system_check --require-cuda --expected-cuda 12.8
 nvidia-smi
 ```
 
-If the installed NVIDIA driver cannot support the locked CUDA 12.6 build, let uv select a backend
-compatible with the installed driver and record the resulting environment difference. This fallback
-does not use the project lock for PyTorch:
+`requirements-server-cu128.txt` is exported from `uv.lock`, so the server uses the resolved versions
+rather than resolving a fresh environment. Do not install another Conda package after the pip/uv
+installation. If the environment must change, update `environment.server.yml` and recreate it. The
+project records the actual PyTorch, CUDA runtime, cuDNN, GPU, and driver values in the preflight
+output.
+
+If CUDA 12.8 installation fails, use automatic backend selection only as a documented fallback. The
+resulting environment is not protocol-identical to the standard CUDA 12.8 environment:
 
 ```bash
-uv venv --python 3.11
-uv pip install --python .venv/bin/python --editable ".[dev]" --torch-backend=auto
+uv pip install --python "$CONDA_PREFIX/bin/python" --editable ".[dev]" --torch-backend=auto
+python -m remit.system_check --require-cuda
 ```
 
 Download and verify the dataset if `data/processed/tox21/molecules.parquet` was not copied to the
@@ -79,8 +92,8 @@ curl --fail --location \
   --output data/raw/tox21.csv.gz \
   https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/tox21.csv.gz
 gzip --decompress --keep data/raw/tox21.csv.gz
-uv run remit data prepare
-uv run remit data verify
+remit data prepare
+remit data verify
 git diff --exit-code -- data/splits/tox21/scaffold
 ```
 
@@ -92,13 +105,13 @@ and metadata exactly.
 Validate the run matrix first:
 
 ```bash
-uv run python scripts/run_standard_matrix.py --gpu-ids 0 1 --dry-run
+python scripts/run_standard_matrix.py --gpu-ids 0 1 --dry-run
 ```
 
 Run all 27 jobs:
 
 ```bash
-uv run python scripts/run_standard_matrix.py --gpu-ids 0 1
+python scripts/run_standard_matrix.py --gpu-ids 0 1
 ```
 
 RF runs sequentially on CPU because each forest already uses all CPU cores. GINE and AttentiveFP

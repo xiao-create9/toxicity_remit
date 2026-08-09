@@ -1,0 +1,8 @@
+name: toxicity-remit
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      - uv==0.11.8
