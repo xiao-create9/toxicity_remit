@@ -22,5 +22,9 @@ reports/*
 !data/interim/.gitkeep
 !data/processed/.gitkeep
 !data/splits/.gitkeep
+!data/splits/tox21/
+!data/splits/tox21/scaffold/
+!data/splits/tox21/scaffold/split_*.csv
+!data/splits/tox21/scaffold/split_*.json
 !runs/.gitkeep
 !reports/.gitkeep

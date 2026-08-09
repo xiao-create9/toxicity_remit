@@ -1,0 +1,33 @@
+{
+  "audit": {
+    "canonical_molecule_leakage": false,
+    "partition_counts": {
+      "test": 759,
+      "train": 6068,
+      "validation": 759
+    },
+    "sample_count": 7586,
+    "scaffold_counts": {
+      "test": 95,
+      "train": 3772,
+      "validation": 96
+    },
+    "scaffold_leakage": false
+  },
+  "created_at": "2026-08-09T10:36:12.929189+00:00",
+  "dataset": "tox21",
+  "fractions": {
+    "test": 0.1,
+    "train": 0.8,
+    "validation": 0.1
+  },
+  "index_sha256": "bd10c977e9a706547b387418ec338de209a90de2c60c49f8c2813936c559988d",
+  "label_balance_weight": 0.25,
+  "processed_data_path": "/Users/xiao/Documents/paper/toxicity_remit/data/processed/tox21/molecules.parquet",
+  "processed_data_sha256": "7163425e5cf47f110befc32cfcf33d2e351bbb554d3b8c0df5d1f0b4d639c885",
+  "schema_version": 1,
+  "seed": 13,
+  "split_config_hash": "d87f5facef5f0943ab44095f239f6c6c47603ebec35ff2636a3e28ed4307652d",
+  "split_id": 0,
+  "strategy": "scaffold"
+}

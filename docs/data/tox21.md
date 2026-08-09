@@ -1,8 +1,8 @@
 # Tox21 Stage A dataset and split record
 
 This record freezes the provenance and aggregate statistics of the Tox21 artifacts generated on
-2026-08-09. Raw and generated data are intentionally excluded from Git; they can be regenerated
-from the source and configuration recorded here.
+2026-08-09. Raw and processed molecular data are intentionally excluded from Git; the fixed split
+CSV/JSON indices are versioned so every method reads exactly the same partitions.
 
 ## Source
 
