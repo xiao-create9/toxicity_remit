@@ -63,10 +63,12 @@ nvidia-smi
 ```
 
 If the installed NVIDIA driver cannot support the locked CUDA 12.6 build, let uv select a backend
-compatible with the installed driver and record the resulting lock/environment difference:
+compatible with the installed driver and record the resulting environment difference. This fallback
+does not use the project lock for PyTorch:
 
 ```bash
-uv sync --extra dev --torch-backend=auto
+uv venv --python 3.11
+uv pip install --python .venv/bin/python --editable ".[dev]" --torch-backend=auto
 ```
 
 Download and verify the dataset if `data/processed/tox21/molecules.parquet` was not copied to the

@@ -19,8 +19,10 @@ jobs:
           enable-cache: true
       - name: Verify lock file
         run: uv lock --check
+      - name: Create test environment
+        run: uv venv --python 3.11
       - name: Install CPU test dependencies
-        run: uv sync --extra dev --torch-backend=cpu
+        run: uv pip install --python .venv/bin/python --editable ".[dev]" --torch-backend=cpu
       - name: Lint
         run: uv run --no-sync ruff check .
       - name: Format check
