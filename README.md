@@ -23,15 +23,13 @@ uv run remit config show
 uv run pytest
 ```
 
-CUDA 12.8 + Conda 服务器请使用仓库提供的环境入口。Conda 负责隔离 Python，依赖直接
-安装到该 Conda 环境中，不会额外创建 `.venv`：
+CUDA 12.8 服务器使用仓库提供的 Conda 环境入口。Conda 创建并管理完整环境，YAML
+中的 `pip` 部分负责安装官方 PyTorch CUDA 12.8 wheel 和锁定的 Python 依赖；服务器
+不需要安装 `uv`，也不会额外创建 `.venv`：
 
 ```bash
 conda env create -f environment.server.yml
 conda activate toxicity-remit
-uv pip install --python "$CONDA_PREFIX/bin/python" \
-  --requirements requirements-server-cu128.txt \
-  --extra-index-url https://download.pytorch.org/whl/cu128
 python -m remit.system_check --require-cuda --expected-cuda 12.8
 ```
 

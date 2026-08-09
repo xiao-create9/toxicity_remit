@@ -52,9 +52,10 @@ score. Every prediction is stored in long form as one molecule-endpoint row.
 
 ## A800 server setup (Conda + CUDA 12.8)
 
-The Linux dependency source is the official PyTorch CUDA 12.8 wheel index. Conda owns the isolated
-Python 3.11 environment; `uv pip` installs directly into that environment, so no nested `.venv` is
-created:
+The Linux dependency source is the official PyTorch CUDA 12.8 wheel index. Conda creates and owns
+the complete Python 3.11 environment. The `pip` section inside `environment.server.yml` installs the
+official CUDA wheel and the locked Python dependencies as part of `conda env create`; the server
+does not need uv and no nested `.venv` is created:
 
 ```bash
 git clone https://github.com/xiao-create9/toxicity_remit.git
@@ -62,26 +63,22 @@ cd toxicity_remit
 
 conda env create -f environment.server.yml
 conda activate toxicity-remit
-uv pip install --python "$CONDA_PREFIX/bin/python" \
-  --requirements requirements-server-cu128.txt \
-  --extra-index-url https://download.pytorch.org/whl/cu128
 
 python -m remit.system_check --require-cuda --expected-cuda 12.8
 nvidia-smi
 ```
 
-`requirements-server-cu128.txt` is exported from `uv.lock`, so the server uses the resolved versions
-rather than resolving a fresh environment. Do not install another Conda package after the pip/uv
-installation. If the environment must change, update `environment.server.yml` and recreate it. The
-project records the actual PyTorch, CUDA runtime, cuDNN, GPU, and driver values in the preflight
-output.
+`requirements-server-cu128.txt` contains the resolved versions, so the server does not resolve a
+fresh Python environment. Do not install another package after environment creation. If the
+environment must change, update the definitions and recreate it. The project records the actual
+PyTorch, CUDA runtime, cuDNN, GPU, and driver values in the preflight output.
 
-If CUDA 12.8 installation fails, use automatic backend selection only as a documented fallback. The
-resulting environment is not protocol-identical to the standard CUDA 12.8 environment:
+If environment creation fails partway through, remove only this named environment and recreate it
+after fixing the reported network, driver, or package error:
 
 ```bash
-uv pip install --python "$CONDA_PREFIX/bin/python" --editable ".[dev]" --torch-backend=auto
-python -m remit.system_check --require-cuda
+conda env remove -n toxicity-remit
+conda env create -f environment.server.yml
 ```
 
 Download and verify the dataset if `data/processed/tox21/molecules.parquet` was not copied to the
@@ -121,7 +118,7 @@ use DDP.
 To run only GNN jobs:
 
 ```bash
-uv run python scripts/run_standard_matrix.py --models gine attentivefp --gpu-ids 0 1
+python scripts/run_standard_matrix.py --models gine attentivefp --gpu-ids 0 1
 ```
 
 ## Outputs
