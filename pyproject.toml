@@ -16,6 +16,9 @@ dependencies = [
   "pyarrow>=17,<22",
   "pyyaml>=6.0,<7",
   "rdkit>=2024.3,<2026.4",
+  "scikit-learn>=1.5,<2",
+  "torch>=2.7,<3",
+  "torch-geometric>=2.6,<3",
 ]
 
 [project.optional-dependencies]
@@ -30,6 +33,22 @@ remit = "remit.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/remit"]
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cpu", marker = "sys_platform != 'linux'" },
+  { index = "pytorch-cu126", marker = "sys_platform == 'linux'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
 
 [tool.pytest.ini_options]
 addopts = "-ra --strict-markers"

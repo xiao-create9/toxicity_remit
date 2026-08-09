@@ -5,13 +5,13 @@ from __future__ import annotations
 import json
 import random
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 
 from remit.config import ResolvedConfig
+from remit.data.standardize import molecule_table_content_hash
 from remit.utils import atomic_write_json, resolve_path, sha256_file, stable_hash
 
 
@@ -231,15 +231,16 @@ def generate_scaffold_splits(config: ResolvedConfig) -> list[SplitArtifact]:
         split_frame.to_csv(index_path, index=False)
         metadata = {
             "schema_version": 1,
-            "created_at": datetime.now(UTC).isoformat(),
             "dataset": data_config["name"],
             "strategy": "scaffold",
             "split_id": split_id,
             "seed": int(seed),
             "fractions": fractions,
             "label_balance_weight": float(split_config.get("label_balance_weight", 0.0)),
-            "processed_data_path": str(molecules_path),
-            "processed_data_sha256": sha256_file(molecules_path),
+            "processed_data_path": str(Path(data_config["output_dir"]) / "molecules.parquet"),
+            "processed_data_content_sha256": molecule_table_content_hash(
+                frame, list(data_config["label_columns"])
+            ),
             "split_config_hash": stable_hash(split_config),
             "index_sha256": sha256_file(index_path),
             "audit": audit,
@@ -277,7 +278,8 @@ def verify_split_files(config: ResolvedConfig) -> list[dict[str, Any]]:
         metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
         if metadata.get("seed") != expected_seed:
             raise SplitError(f"Seed mismatch for split_id={split_id}")
-        if metadata.get("processed_data_sha256") != sha256_file(molecules_path):
+        content_hash = molecule_table_content_hash(frame, list(data_config["label_columns"]))
+        if metadata.get("processed_data_content_sha256") != content_hash:
             raise SplitError(f"Processed data hash mismatch for split_id={split_id}")
         if metadata.get("index_sha256") != sha256_file(index_path):
             raise SplitError(f"Split index hash mismatch for split_id={split_id}")
@@ -349,7 +351,9 @@ def summarize_split_files(config: ResolvedConfig) -> dict[str, Any]:
             )
     return {
         "dataset": data_config["name"],
-        "processed_data_sha256": sha256_file(molecules_path),
+        "processed_data_content_sha256": molecule_table_content_hash(
+            frame, list(data_config["label_columns"])
+        ),
         "sample_count": int(len(frame)),
         "split_config_hash": stable_hash(split_config),
         "splits": summaries,

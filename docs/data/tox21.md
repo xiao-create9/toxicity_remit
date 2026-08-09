@@ -17,6 +17,7 @@ CSV/JSON indices are versioned so every method reads exactly the same partitions
 
 - Processing config SHA-256: `9387a3c22fce5e90e6d6ee2fefa5c6589049b72af4ca3c306320d274b54a4650`
 - Processed Parquet SHA-256: `7163425e5cf47f110befc32cfcf33d2e351bbb554d3b8c0df5d1f0b4d639c885`
+- Semantic molecule-table SHA-256: `d137a9b0fbcce6e1bf3457abf3209f59347de6aa5dad3380159d04099094222c`
 - Valid source rows: 7,822
 - Invalid source rows: 9
 - Unique canonical molecules: 7,586

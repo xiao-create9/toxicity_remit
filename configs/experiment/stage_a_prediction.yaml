@@ -1,0 +1,17 @@
+experiment:
+  name: stage_a_prediction
+
+split:
+  strategy: scaffold
+  output_dir: data/splits/tox21/scaffold
+  seeds: [13, 37, 73]
+  fractions:
+    train: 0.8
+    validation: 0.1
+    test: 0.1
+  label_balance_weight: 0.25
+
+reproducibility:
+  model_seeds: [2026, 2027, 2028]
+  deterministic_algorithms: true
+  warn_only: true

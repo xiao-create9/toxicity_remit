@@ -1,0 +1,13 @@
+model:
+  name: ecfp_rf
+  fingerprint:
+    radius: 2
+    size: 2048
+    include_chirality: true
+  random_forest:
+    n_estimators: 500
+    max_depth: null
+    min_samples_leaf: 1
+    max_features: sqrt
+    class_weight: balanced
+    n_jobs: -1

@@ -1,0 +1,13 @@
+training:
+  max_epochs: 100
+  min_epochs: 10
+  early_stopping_patience: 20
+  early_stopping_min_delta: 0.0001
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  gradient_clip_norm: 5.0
+  pos_weight_cap: 20.0
+  threshold_grid_size: 91
+  amp: true
+  amp_dtype: bfloat16

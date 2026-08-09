@@ -96,6 +96,7 @@ class RunContext(AbstractContextManager["RunContext"]):
         self.manifest_path = self.run_dir / "manifest.json"
         self.logger = logging.getLogger(f"remit.run.{self.run_id}")
         self._started_at: str | None = None
+        self.summary: dict[str, Any] = {}
 
     def __enter__(self) -> Self:
         self.run_dir.mkdir(parents=True, exist_ok=False)
@@ -156,8 +157,12 @@ class RunContext(AbstractContextManager["RunContext"]):
     ) -> None:
         atomic_write_json(self.run_dir / f"metrics_{partition}.json", metrics)
 
+    def record_summary(self, **values: Any) -> None:
+        """Add model/training facts that persist in the final run manifest."""
+        self.summary.update(values)
+
     def _base_manifest(self, status: str) -> dict[str, Any]:
-        return {
+        manifest = {
             "schema_version": 1,
             "run_id": self.run_id,
             "status": status,
@@ -171,6 +176,8 @@ class RunContext(AbstractContextManager["RunContext"]):
             "environment": environment_manifest(self.config.project_root),
             "inputs": self._input_hashes(),
         }
+        manifest.update(self.summary)
+        return manifest
 
     def _input_hashes(self) -> dict[str, Any]:
         data = self.config.section("data")

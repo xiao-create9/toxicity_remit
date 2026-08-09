@@ -10,12 +10,14 @@ from remit.config import ResolvedConfig, load_config
 @pytest.fixture
 def project_config(tmp_path: Path) -> tuple[ResolvedConfig, Path]:
     configs = tmp_path / "configs"
-    for folder in ["data", "experiment", "runtime"]:
+    for folder in ["data", "experiment", "model", "runtime", "training"]:
         (configs / folder).mkdir(parents=True, exist_ok=True)
     (tmp_path / "data" / "raw").mkdir(parents=True)
     (configs / "default.yaml").write_text(
         """defaults:
   - data: fixture
+  - model: fixture
+  - training: fixture
   - experiment: stage_a
   - runtime: standard
 project:
@@ -60,6 +62,37 @@ reproducibility:
 """,
         encoding="utf-8",
     )
+    (configs / "model" / "fixture.yaml").write_text(
+        """model:
+  name: ecfp_rf
+  fingerprint: {radius: 2, size: 128, include_chirality: true}
+  random_forest:
+    n_estimators: 5
+    max_depth: null
+    min_samples_leaf: 1
+    max_features: sqrt
+    class_weight: balanced
+    n_jobs: 1
+""",
+        encoding="utf-8",
+    )
+    (configs / "training" / "fixture.yaml").write_text(
+        """training:
+  max_epochs: 1
+  min_epochs: 1
+  early_stopping_patience: 1
+  early_stopping_min_delta: 0.0
+  batch_size: 8
+  learning_rate: 0.001
+  weight_decay: 0.0
+  gradient_clip_norm: 5.0
+  pos_weight_cap: 20.0
+  threshold_grid_size: 11
+  amp: false
+  amp_dtype: bfloat16
+""",
+        encoding="utf-8",
+    )
     (configs / "runtime" / "standard.yaml").write_text(
         """runtime:
   runs_dir: runs
@@ -67,6 +100,7 @@ reproducibility:
   log_level: INFO
   gpu_ids: [0, 1]
   num_workers: 0
+  device: cpu
 """,
         encoding="utf-8",
     )

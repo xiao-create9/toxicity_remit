@@ -39,6 +39,27 @@ def _sample_id(canonical_smiles: str) -> str:
     return f"mol_{digest}"
 
 
+def molecule_table_content_hash(frame: pd.DataFrame, label_columns: list[str]) -> str:
+    """Hash semantic table contents independently of Parquet implementation details."""
+    records: list[dict[str, Any]] = []
+    for _, row in frame.sort_values("sample_id").iterrows():
+        record: dict[str, Any] = {
+            "sample_id": str(row["sample_id"]),
+            "canonical_smiles": str(row["canonical_smiles"]),
+            "scaffold": str(row["scaffold"]),
+            "source_ids": str(row["source_ids"]),
+            "source_row_count": int(row["source_row_count"]),
+        }
+        record.update(
+            {
+                endpoint: None if pd.isna(row[endpoint]) else int(row[endpoint])
+                for endpoint in label_columns
+            }
+        )
+        records.append(record)
+    return stable_hash(records)
+
+
 def _parse_label(value: Any, missing_values: set[str]) -> int | None:
     if value is None or pd.isna(value):
         return None
@@ -246,6 +267,9 @@ def standardize_dataset(config: ResolvedConfig) -> StandardizationResult:
         "processing_config": data_config,
         "processing_config_hash": stable_hash(data_config),
         "rdkit_version": rdBase.rdkitVersion,
+        "molecule_table_content_sha256": molecule_table_content_hash(
+            molecules_frame, label_columns
+        ),
         "artifacts": artifacts,
         "report": report,
     }

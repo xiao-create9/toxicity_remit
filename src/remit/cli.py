@@ -19,6 +19,7 @@ from remit.data.standardize import (
     verify_processed_dataset,
 )
 from remit.protocol import RunContext
+from remit.training.common import TrainingError
 
 
 def _shared_config_arguments(parser: argparse.ArgumentParser) -> None:
@@ -60,6 +61,20 @@ def build_parser() -> argparse.ArgumentParser:
     _shared_config_arguments(smoke)
     smoke.add_argument("--split-id", type=int, default=0)
     smoke.add_argument("--seed", type=int, default=2026)
+
+    train = groups.add_parser("train", help="Train and evaluate one frozen prediction run")
+    _shared_config_arguments(train)
+    train.set_defaults(config="configs/train_gine.yaml")
+    train.add_argument("--split-id", type=int, required=True)
+    train.add_argument("--seed", type=int, required=True)
+
+    report_group = groups.add_parser("report", help="Aggregate completed experiment runs")
+    report_commands = report_group.add_subparsers(dest="command", required=True)
+    prediction_report = report_commands.add_parser(
+        "prediction", help="Aggregate the frozen prediction matrix"
+    )
+    prediction_report.add_argument("--output", default="reports/stage_a_prediction")
+    prediction_report.add_argument("--allow-incomplete", action="store_true")
     return parser
 
 
@@ -71,6 +86,18 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
+        if args.group == "report" and args.command == "prediction":
+            from pathlib import Path
+
+            from remit.reporting.prediction import aggregate_prediction_runs
+
+            protocol = aggregate_prediction_runs(
+                project_root=Path.cwd(),
+                output_dir=Path(args.output),
+                require_complete=not args.allow_incomplete,
+            )
+            _print_json(protocol)
+            return 0
         config = load_config(args.config, args.overrides)
         if args.group == "config":
             print(config.to_yaml(), end="")
@@ -126,7 +153,19 @@ def main(argv: list[str] | None = None) -> int:
                 run.write_metrics("test", {"status": "not_evaluated", "metric": None})
             _print_json({"run_dir": str(run.run_dir), "status": "completed"})
             return 0
-    except (ConfigError, DataStandardizationError, SplitError, FileNotFoundError) as exc:
+        if args.group == "train":
+            from remit.training.runner import run_prediction
+
+            run = run_prediction(config, split_id=args.split_id, seed=args.seed)
+            _print_json({"run_dir": str(run.run_dir), "status": "completed"})
+            return 0
+    except (
+        ConfigError,
+        DataStandardizationError,
+        SplitError,
+        TrainingError,
+        FileNotFoundError,
+    ) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     parser.error("Unsupported command")

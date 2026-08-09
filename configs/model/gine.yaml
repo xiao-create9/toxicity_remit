@@ -1,0 +1,7 @@
+model:
+  name: gine
+  hidden_dim: 256
+  num_layers: 5
+  dropout: 0.2
+  train_eps: true
+  pooling: add_mean

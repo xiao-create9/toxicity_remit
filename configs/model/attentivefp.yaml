@@ -1,0 +1,6 @@
+model:
+  name: attentivefp
+  hidden_dim: 256
+  num_layers: 3
+  num_timesteps: 2
+  dropout: 0.2

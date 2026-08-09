@@ -1,0 +1,10 @@
+defaults:
+  - data: tox21
+  - model: gine
+  - training: standard
+  - experiment: stage_a_prediction
+  - runtime: standard
+
+project:
+  name: toxicity_remit
+  root: .

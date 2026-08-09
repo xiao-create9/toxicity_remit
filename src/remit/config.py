@@ -175,6 +175,19 @@ def validate_config(config: dict[str, Any]) -> None:
     if not isinstance(model_seeds, list) or len(model_seeds) != 3 or len(set(model_seeds)) != 3:
         raise ConfigError("The standard protocol requires exactly three unique model seeds")
 
+    if "model" in config:
+        model_name = config["model"].get("name")
+        if model_name not in {"ecfp_rf", "gine", "attentivefp"}:
+            raise ConfigError(f"Unsupported model.name: {model_name}")
+        if "training" not in config:
+            raise ConfigError("Prediction configurations require a training section")
+        training = config["training"]
+        for key in ("max_epochs", "batch_size", "threshold_grid_size"):
+            if int(training.get(key, 0)) <= 0:
+                raise ConfigError(f"training.{key} must be positive")
+        if int(training["threshold_grid_size"]) < 3:
+            raise ConfigError("training.threshold_grid_size must be at least 3")
+
 
 def config_as_json(config: ResolvedConfig) -> str:
     return json.dumps(config.values, ensure_ascii=False, sort_keys=True, indent=2)

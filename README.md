@@ -1,13 +1,15 @@
 # toxicity_remit
 
 REMIT（Reliable Endpoint-conditioned Motif Interaction Rationales for Toxicity
-Prediction）的全新实验工程。本仓库当前完成 Stage A 的基础设施部分：
+Prediction）的全新实验工程。本仓库当前完成 Stage A 的数据协议与预测基线：
 
 - 可审计的分子标准化、去重和标签冲突处理；
 - 三组固定的 80/10/10 Bemis–Murcko scaffold splits；
 - 分层 YAML 配置、命令行覆盖和配置哈希；
 - 固定随机性、运行清单、数据哈希、日志和失败记录；
 - 阻止训练/选模阶段访问测试集的数据访问门禁。
+- ECFP4 + Random Forest、GINE、AttentiveFP 三种预测模型；
+- 3 scaffold splits × 3 model seeds 的双 GPU 运行与自动结果聚合。
 
 旧工程 `Toxicity_prediction` 仅作为历史参考，本项目没有也不会 import 旧工程模块。
 
@@ -26,7 +28,7 @@ uv run pytest
 将原始 CSV 放到 `data/raw/`。默认 Tox21 配置要求：
 
 - SMILES 列：`smiles`；
-- 可选样本 ID 列：`sample_id`；
+- 样本 ID 列：`mol_id`，缺失时回退到原始行号；
 - 12 个 Tox21 endpoint 标签列，取值为 `0`、`1` 或缺失。
 
 若列名或输入文件不同，通过命令行覆盖，无需修改代码：
@@ -64,6 +66,38 @@ data/splits/tox21/scaffold/
 3. scaffold group 不跨 train/validation/test；
 4. split 引用的处理数据 SHA-256 与当前文件一致。
 
+## 预测基线
+
+单次运行：
+
+```bash
+uv run remit train --config configs/train_ecfp_rf.yaml --split-id 0 --seed 2026
+uv run remit train --config configs/train_gine.yaml --split-id 0 --seed 2026
+uv run remit train --config configs/train_attentivefp.yaml --split-id 0 --seed 2026
+```
+
+双 A800 标准矩阵共 27 个 runs：RF 在 CPU 顺序运行，18 个 GNN runs 在 GPU 0/1
+之间分配。全部完成后脚本自动生成聚合报告。
+
+```bash
+uv run python scripts/run_standard_matrix.py --gpu-ids 0 1
+```
+
+只打印计划而不运行：
+
+```bash
+uv run python scripts/run_standard_matrix.py --gpu-ids 0 1 --dry-run
+```
+
+手动重新聚合：
+
+```bash
+uv run remit report prediction
+```
+
+完整模型、指标、产物和服务器运行说明见
+[`docs/experiments/prediction_baselines.md`](docs/experiments/prediction_baselines.md)。
+
 ## 配置系统
 
 入口为 `configs/default.yaml`，其中的 `defaults` 依次组合数据、实验和运行时配置。
@@ -92,8 +126,13 @@ runs/{experiment}/{dataset}/{split_id}/{seed}/{run_id}/
 ├── config.yaml
 ├── manifest.json
 ├── train.log
+├── thresholds.json
+├── predictions_validation.parquet
+├── predictions_test.parquet
 ├── metrics_validation.json
-└── metrics_test.json
+├── metrics_test.json
+├── training_history.csv
+└── checkpoint.pt / checkpoint.joblib
 ```
 
 训练代码必须通过 `SplitAccessGuard` 读取分区。在 `training` 或 `model_selection`
@@ -113,5 +152,5 @@ The frozen Tox21 source, processing statistics, split counts, and artifact hashe
 
 ## 当前范围
 
-本提交尚未实现 ECFP、RF、XGBoost 或 GNN 基线。它们属于 Stage A 的下一批工作，
-将在当前不可变 split 和运行协议之上实现。
+本提交已实现 ECFP4 + RF、GINE 和 AttentiveFP。尚未实现 XGBoost、D-MPNN、
+endpoint embedding 或 REMIT 动态门控；这些内容将在预测基线结果稳定后继续实现。

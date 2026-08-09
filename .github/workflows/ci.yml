@@ -11,17 +11,19 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
-      - name: Install locked dependencies
-        run: uv sync --locked --extra dev
+      - name: Verify lock file
+        run: uv lock --check
+      - name: Install CPU test dependencies
+        run: uv sync --extra dev --torch-backend=cpu
       - name: Lint
-        run: uv run ruff check .
+        run: uv run --no-sync ruff check .
       - name: Format check
-        run: uv run ruff format --check .
+        run: uv run --no-sync ruff format --check .
       - name: Test
-        run: uv run pytest
+        run: uv run --no-sync pytest

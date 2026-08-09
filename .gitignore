@@ -15,6 +15,7 @@ data/processed/*
 data/splits/*
 runs/*
 reports/*
+scheduler_logs/
 
 # Keep directory contracts in Git.
 !data/raw/.gitkeep
