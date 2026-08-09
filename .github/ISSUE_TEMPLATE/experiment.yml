@@ -1,0 +1,42 @@
+name: Experiment
+description: 规划一个可追溯的 REMIT 实验
+title: "[Experiment] "
+labels: [experiment]
+body:
+  - type: input
+    id: claim
+    attributes:
+      label: 对应主张
+      description: 填写 C1-C9 或说明这是基础设施实验
+      placeholder: C1
+    validations:
+      required: true
+  - type: textarea
+    id: hypothesis
+    attributes:
+      label: 假设与要证明的结论
+    validations:
+      required: true
+  - type: textarea
+    id: protocol
+    attributes:
+      label: 固定协议
+      description: 数据、split、seed、基线、指标、统计检验和通过条件
+    validations:
+      required: true
+  - type: checkboxes
+    id: leakage
+    attributes:
+      label: 防泄漏检查
+      options:
+        - label: 所有方法读取同一显式 split
+          required: true
+        - label: test 不参与模型、阈值和解释超参数选择
+          required: true
+        - label: 输出可追溯到配置、commit、seed 和数据 hash
+          required: true
+  - type: textarea
+    id: artifacts
+    attributes:
+      label: 预期产物
+      placeholder: runs/... and reports/...

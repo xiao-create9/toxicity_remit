@@ -1,0 +1,8 @@
+defaults:
+  - data: tox21
+  - experiment: stage_a
+  - runtime: standard
+
+project:
+  name: toxicity_remit
+  root: .

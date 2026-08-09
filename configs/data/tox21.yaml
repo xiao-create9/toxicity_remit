@@ -1,0 +1,28 @@
+data:
+  name: tox21
+  input_path: data/raw/tox21.csv
+  output_dir: data/processed/tox21
+  smiles_column: smiles
+  id_column: sample_id
+  label_columns:
+    - NR-AR
+    - NR-AR-LBD
+    - NR-AhR
+    - NR-Aromatase
+    - NR-ER
+    - NR-ER-LBD
+    - NR-PPAR-gamma
+    - SR-ARE
+    - SR-ATAD5
+    - SR-HSE
+    - SR-MMP
+    - SR-p53
+  missing_values: ["", "NA", "NaN", "nan", "null", "None"]
+  conflict_policy: set_missing
+  standardization:
+    cleanup: true
+    largest_fragment: true
+    prefer_organic: true
+    uncharge: true
+    canonical_tautomer: false
+    isomeric_smiles: true

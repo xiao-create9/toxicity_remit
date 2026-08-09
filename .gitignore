@@ -1,0 +1,25 @@
+.DS_Store
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Data and experiment artifacts are generated locally.
+data/raw/*
+data/interim/*
+data/processed/*
+data/splits/*
+runs/*
+reports/*
+
+# Keep directory contracts in Git.
+!data/raw/.gitkeep
+!data/interim/.gitkeep
+!data/processed/.gitkeep
+!data/splits/.gitkeep
+!runs/.gitkeep
+!reports/.gitkeep
