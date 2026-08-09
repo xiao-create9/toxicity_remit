@@ -105,7 +105,11 @@ runs/{experiment}/{dataset}/{split_id}/{seed}/{run_id}/
 uv run ruff check .
 uv run pytest --cov=remit --cov-report=term-missing
 uv run remit data verify
+uv run remit data summary
 ```
+
+The frozen Tox21 source, processing statistics, split counts, and artifact hashes are recorded in
+[`docs/data/tox21.md`](docs/data/tox21.md).
 
 ## 当前范围
 

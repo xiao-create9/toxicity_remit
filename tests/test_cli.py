@@ -24,6 +24,7 @@ def test_prepare_verify_and_protocol_smoke_cli(project_config: tuple[object, Pat
 
     assert main(["data", "prepare", "--config", str(config_path)]) == 0
     assert main(["data", "verify", "--config", str(config_path)]) == 0
+    assert main(["data", "summary", "--config", str(config_path)]) == 0
     assert (
         main(
             [

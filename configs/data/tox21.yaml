@@ -3,7 +3,7 @@ data:
   input_path: data/raw/tox21.csv
   output_dir: data/processed/tox21
   smiles_column: smiles
-  id_column: sample_id
+  id_column: mol_id
   label_columns:
     - NR-AR
     - NR-AR-LBD

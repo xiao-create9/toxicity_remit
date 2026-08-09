@@ -284,3 +284,74 @@ def verify_split_files(config: ResolvedConfig) -> list[dict[str, Any]]:
         audit = validate_split(frame, pd.read_csv(index_path, dtype=str))
         audits.append({"split_id": split_id, "seed": expected_seed, **audit})
     return audits
+
+
+def summarize_split_files(config: ResolvedConfig) -> dict[str, Any]:
+    """Return paper-ready partition, endpoint, and cross-seed split statistics."""
+    data_config = config.section("data")
+    split_config = config.section("split")
+    molecules_path = (
+        resolve_path(config.project_root, data_config["output_dir"]) / "molecules.parquet"
+    )
+    frame = pd.read_parquet(molecules_path)
+    output_dir = resolve_path(config.project_root, split_config["output_dir"])
+    assignments: list[pd.DataFrame] = []
+    summaries: list[dict[str, Any]] = []
+    for split_id, seed in enumerate(split_config["seeds"]):
+        split_frame = pd.read_csv(output_dir / f"split_{split_id}.csv", dtype=str)
+        validate_split(frame, split_frame)
+        assignments.append(split_frame.set_index("sample_id").sort_index())
+        joined = frame.merge(split_frame, on=["sample_id", "scaffold"], validate="one_to_one")
+        partition_summary: dict[str, Any] = {}
+        for partition in PARTITIONS:
+            subset = joined.loc[joined["partition"] == partition]
+            partition_summary[partition] = {
+                "samples": int(len(subset)),
+                "fraction": float(len(subset) / len(joined)),
+                "scaffolds": int(subset["scaffold"].nunique()),
+                "endpoints": {
+                    endpoint: {
+                        "known": int(subset[endpoint].notna().sum()),
+                        "positive": int((subset[endpoint] == 1).sum()),
+                        "negative": int((subset[endpoint] == 0).sum()),
+                        "positive_rate": (
+                            float((subset[endpoint] == 1).sum() / subset[endpoint].notna().sum())
+                            if subset[endpoint].notna().any()
+                            else None
+                        ),
+                    }
+                    for endpoint in data_config["label_columns"]
+                },
+            }
+        summaries.append({"split_id": split_id, "seed": seed, "partitions": partition_summary})
+
+    comparisons: list[dict[str, Any]] = []
+    for left_id in range(len(assignments)):
+        for right_id in range(left_id + 1, len(assignments)):
+            left = assignments[left_id]
+            right = assignments[right_id]
+            if not left.index.equals(right.index):
+                raise SplitError("Configured splits do not reference identical sample IDs")
+            left_test = set(left.index[left["partition"] == "test"])
+            right_test = set(right.index[right["partition"] == "test"])
+            comparisons.append(
+                {
+                    "left_split_id": left_id,
+                    "right_split_id": right_id,
+                    "partition_agreement": float((left["partition"] == right["partition"]).mean()),
+                    "changed_partition_fraction": float(
+                        (left["partition"] != right["partition"]).mean()
+                    ),
+                    "test_jaccard": float(
+                        len(left_test & right_test) / len(left_test | right_test)
+                    ),
+                }
+            )
+    return {
+        "dataset": data_config["name"],
+        "processed_data_sha256": sha256_file(molecules_path),
+        "sample_count": int(len(frame)),
+        "split_config_hash": stable_hash(split_config),
+        "splits": summaries,
+        "cross_seed_comparisons": comparisons,
+    }

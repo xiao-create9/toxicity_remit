@@ -7,7 +7,12 @@ import json
 import sys
 
 from remit.config import ConfigError, load_config
-from remit.data.splits import SplitError, generate_scaffold_splits, verify_split_files
+from remit.data.splits import (
+    SplitError,
+    generate_scaffold_splits,
+    summarize_split_files,
+    verify_split_files,
+)
 from remit.data.standardize import (
     DataStandardizationError,
     standardize_dataset,
@@ -44,6 +49,7 @@ def build_parser() -> argparse.ArgumentParser:
         ("split", "Generate the three fixed scaffold splits"),
         ("prepare", "Standardize data and generate all scaffold splits"),
         ("verify", "Verify artifact hashes and leakage gates"),
+        ("summary", "Report partition and endpoint statistics"),
     ]:
         command = data_commands.add_parser(name, help=help_text)
         _shared_config_arguments(command)
@@ -107,6 +113,10 @@ def main(argv: list[str] | None = None) -> int:
                     "splits": verify_split_files(config),
                 }
             )
+            return 0
+
+        if args.group == "data" and args.command == "summary":
+            _print_json(summarize_split_files(config))
             return 0
 
         if args.group == "protocol" and args.command == "smoke":
