@@ -15,9 +15,9 @@
 - [ ] 未修改既有固定 split；如必须修改，已记录原因并更新版本
 - [ ] 未使用 test set 选择超参数、阈值或 checkpoint
 - [ ] 新结果包含配置、seed、commit、输入 hash 和失败记录
-- [ ] `uv run ruff check .` 通过
-- [ ] `uv run ruff format --check .` 通过
-- [ ] `uv run pytest` 通过
+- [ ] 在 Conda 检查环境中执行 `ruff check .` 通过
+- [ ] 在 Conda 检查环境中执行 `ruff format --check .` 通过
+- [ ] 在 Conda 检查环境中执行 `pytest` 通过
 
 ## 结果与限制
 

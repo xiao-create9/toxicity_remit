@@ -69,9 +69,10 @@ curl --fail --location \
   --output data/raw/tox21.csv.gz \
   https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/tox21.csv.gz
 gzip --decompress --keep data/raw/tox21.csv.gz
-uv run remit data prepare
-uv run remit data verify
-uv run remit data summary
+conda activate toxicity-remit
+remit data prepare
+remit data verify
+remit data summary
 ```
 
 `data prepare` records the exact source digest, processing configuration, RDKit version, output

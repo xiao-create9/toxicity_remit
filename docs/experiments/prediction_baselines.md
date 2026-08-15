@@ -54,8 +54,8 @@ score. Every prediction is stored in long form as one molecule-endpoint row.
 
 The Linux dependency source is the official PyTorch CUDA 12.8 wheel index. Conda creates and owns
 the complete Python 3.11 environment. The `pip` section inside `environment.server.yml` installs the
-official CUDA wheel and the locked Python dependencies as part of `conda env create`; the server
-does not need uv and no nested `.venv` is created:
+official CUDA wheel and the locked Python dependencies as part of `conda env create`; no nested
+`.venv` is created:
 
 ```bash
 git clone https://github.com/xiao-create9/toxicity_remit.git

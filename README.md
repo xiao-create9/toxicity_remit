@@ -15,23 +15,27 @@ Prediction）的全新实验工程。本仓库当前完成 Stage A 的数据协�
 
 ## 环境
 
-推荐 Python 3.11 和 [uv](https://docs.astral.sh/uv/)：
+所有数据处理、测试、训练和报告生成都只在 Linux 服务器执行；本机仅用于编辑和提交
+代码。服务器统一使用 Conda 管理环境，不要求安装其他环境管理工具，也不会创建
+项目内 `.venv`。
 
-```bash
-uv sync --extra dev
-uv run remit config show
-uv run pytest
-```
-
-CUDA 12.8 服务器使用仓库提供的 Conda 环境入口。Conda 创建并管理完整环境，YAML
-中的 `pip` 部分负责安装官方 PyTorch CUDA 12.8 wheel 和锁定的 Python 依赖；服务器
-不需要安装 `uv`，也不会额外创建 `.venv`：
+首次部署：
 
 ```bash
 conda env create -f environment.server.yml
 conda activate toxicity-remit
+python -m pip check
 python -m remit.system_check --require-cuda --expected-cuda 12.8
 ```
+
+后续登录服务器时只需激活已有环境：
+
+```bash
+conda activate toxicity-remit
+```
+
+`environment.server.yml` 中的 `pip` 部分在环境创建过程中安装官方 PyTorch CUDA 12.8
+wheel 和固定版本的 Python 包；这些包仍属于同一个 Conda 环境。
 
 ## 准备数据
 
@@ -44,7 +48,7 @@ python -m remit.system_check --require-cuda --expected-cuda 12.8
 若列名或输入文件不同，通过命令行覆盖，无需修改代码：
 
 ```bash
-uv run remit data prepare \
+remit data prepare \
   --set data.input_path=data/raw/tox21.csv \
   --set data.smiles_column=smiles
 ```
@@ -81,28 +85,28 @@ data/splits/tox21/scaffold/
 单次运行：
 
 ```bash
-uv run remit train --config configs/train_ecfp_rf.yaml --split-id 0 --seed 2026
-uv run remit train --config configs/train_gine.yaml --split-id 0 --seed 2026
-uv run remit train --config configs/train_attentivefp.yaml --split-id 0 --seed 2026
+remit train --config configs/train_ecfp_rf.yaml --split-id 0 --seed 2026
+remit train --config configs/train_gine.yaml --split-id 0 --seed 2026
+remit train --config configs/train_attentivefp.yaml --split-id 0 --seed 2026
 ```
 
 双 A800 标准矩阵共 27 个 runs：RF 在 CPU 顺序运行，18 个 GNN runs 在 GPU 0/1
 之间分配。全部完成后脚本自动生成聚合报告。
 
 ```bash
-uv run python scripts/run_standard_matrix.py --gpu-ids 0 1
+python scripts/run_standard_matrix.py --gpu-ids 0 1
 ```
 
 只打印计划而不运行：
 
 ```bash
-uv run python scripts/run_standard_matrix.py --gpu-ids 0 1 --dry-run
+python scripts/run_standard_matrix.py --gpu-ids 0 1 --dry-run
 ```
 
 手动重新聚合：
 
 ```bash
-uv run remit report prediction
+remit report prediction
 ```
 
 完整模型、指标、产物和服务器运行说明见
@@ -114,7 +118,7 @@ uv run remit report prediction
 点分路径覆盖示例：
 
 ```bash
-uv run remit config show \
+remit config show \
   --set split.seeds='[13,37,73]' \
   --set data.standardization.uncharge=false
 ```
@@ -126,7 +130,7 @@ uv run remit config show \
 以下命令创建一次不训练模型的协议 smoke run：
 
 ```bash
-uv run remit protocol smoke --split-id 0 --seed 2026
+remit protocol smoke --split-id 0 --seed 2026
 ```
 
 目录符合论文实验计划约定：
@@ -151,10 +155,11 @@ runs/{experiment}/{dataset}/{split_id}/{seed}/{run_id}/
 ## 常用检查
 
 ```bash
-uv run ruff check .
-uv run pytest --cov=remit --cov-report=term-missing
-uv run remit data verify
-uv run remit data summary
+ruff check .
+ruff format --check .
+pytest --cov=remit --cov-report=term-missing
+remit data verify
+remit data summary
 ```
 
 The frozen Tox21 source, processing statistics, split counts, and artifact hashes are recorded in
